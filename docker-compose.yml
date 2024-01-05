@@ -7,13 +7,17 @@ services:
       dockerfile: client.Dockerfile
     environment:
       - OTEL_LOG_LEVEL=debug
-      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=prometheus
+      - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
+      - OTEL_EXPORTER_PROMETHEUS_PORT=9464
       - OTEL_LOGS_EXPORTER=otlp
       - OTEL_TRACES_EXPORTER=otlp
       - OTEL_EXPORTER_OTLP_INSECURE=true
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://oteldb:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=client
+    ports:
+      - "9464:9464"
   server:
     restart: always
     command: ["server"]

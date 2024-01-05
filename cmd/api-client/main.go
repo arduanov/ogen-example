@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	"example/internal/api"
+	"example/internal/httpmiddleware"
 	"example/internal/oas"
 )
 
@@ -31,8 +32,14 @@ func run(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
 		return errors.Wrap(err, "server init")
 	}
 
+	routeFinder := httpmiddleware.MakeRouteFinder(oasServer)
+	roundTripper, err := NewMeteredRoundTripper(http.DefaultTransport, m.MeterProvider(), routeFinder)
+	if err != nil {
+		return errors.Wrap(err, "roundTripper init")
+	}
+
 	httpClient := &http.Client{
-		Transport: otelhttp.NewTransport(http.DefaultTransport,
+		Transport: otelhttp.NewTransport(roundTripper,
 			otelhttp.WithTracerProvider(m.TracerProvider()),
 			otelhttp.WithMeterProvider(m.MeterProvider()),
 			otelhttp.WithPropagators(m.TextMapPropagator()),
